@@ -1,5 +1,4 @@
 import yargs from 'yargs';
-import logger from 'winston';
 import configureLogger from './src/logger';
 import Server from './src/server';
 
@@ -17,7 +16,7 @@ function main(): void {
     })
     .option('log-level', {
       alias: 'll',
-      default: 'debug',
+      default: 'DEBUG',
       describe: 'Log messages filter level',
       choices: ['ERROR', 'WARN', 'INFO', 'DEBUG'],
     });
