@@ -11,7 +11,7 @@ function main(): void {
     })
     .option('port', {
       alias: 'p',
-      default: 5001,
+      default: '5001',
       describe: 'Server port',
     })
     .option('log-level', {
@@ -23,11 +23,15 @@ function main(): void {
 
   const { endpoint, port, logLevel } = argv;
 
+  const ENDPOINT = process.env.OPCUA_SERVER_ENDPOINT || endpoint;
+  const PORT = process.env.OPCUA_SERVER_PORT || port;
+  const LOG_LEVEL = process.env.OPCUA_SERVER_LOG_LEVEL || logLevel;
+
   // Configure logger
-  configureLogger(logLevel as string);
+  configureLogger(LOG_LEVEL as string);
 
   // Create OPC UA server
-  const server = new Server(endpoint, port);
+  const server = new Server(ENDPOINT, parseInt(PORT, 10));
   server.startServer();
 }
 
