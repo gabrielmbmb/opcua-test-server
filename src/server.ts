@@ -1,3 +1,4 @@
+import logger from 'winston';
 import {
   OPCUAServerOptions,
   SecurityPolicy,
@@ -5,27 +6,28 @@ import {
   OPCUACertificateManager,
   OPCUAServer,
 } from 'node-opcua';
-import logger from 'winston';
+import userManager from './userManager';
+import Device from './device';
+import fanSpeed from './variables/fan/speed';
 
 export default class Server {
   private endpoint: string;
 
   private port: number;
 
+  private certDir: string;
+
   private server!: OPCUAServer;
 
-  constructor(endpoint: string, port: number) {
+  constructor(endpoint: string, port: number, certDir: string) {
     this.endpoint = endpoint;
     this.port = port;
+    this.certDir = certDir;
   }
 
   public startServer(): void {
     const serverOptions: OPCUAServerOptions = {
-      securityPolicies: [
-        SecurityPolicy.Basic128,
-        SecurityPolicy.Basic256,
-        SecurityPolicy.Basic256Rsa15,
-      ],
+      securityPolicies: [SecurityPolicy.Basic256, SecurityPolicy.Basic256Rsa15],
       securityModes: [
         MessageSecurityMode.None,
         MessageSecurityMode.Sign,
@@ -37,7 +39,12 @@ export default class Server {
         buildDate: new Date(),
         buildNumber: '1234',
       },
+      userManager,
       isAuditing: false,
+      serverCertificateManager: new OPCUACertificateManager({
+        automaticallyAcceptUnknownCertificate: true,
+        rootFolder: this.certDir,
+      }),
       allowAnonymous: false,
     };
 
@@ -52,19 +59,27 @@ export default class Server {
     logger.info('Server is been initialized...');
 
     this.server.initialize(() => {
+      this.constructAddressSpace();
+
       // Start the server
       this.server.start(() => {
         logger.info('Server has been started... (CTRL + C to stop)');
         const {
           endpointUrl,
         } = this.server.endpoints[0].endpointDescriptions()[0];
-        logger.info(`Server endpoints: ${endpointUrl}`);
+        logger.info(`Server main endpoint: ${endpointUrl}`);
       });
     });
   }
 
-  public constructAddressSpace() {
+  public constructAddressSpace(): void {
     const { addressSpace } = this.server.engine;
-    const namespace = addressSpace.getOwnNamespace();
+    if (addressSpace !== null) {
+      const namespace = addressSpace.getOwnNamespace();
+
+      // Add devices to the server
+      const fan = new Device(namespace, addressSpace, 'fan');
+      fan.addVariable(fanSpeed);
+    }
   }
 }
