@@ -1,0 +1,24 @@
+sudo: required
+services:
+- docker
+env:
+  global:
+  - IMAGE_NAME=gabrielmbmb/opcua-test-server
+  - REGISTRY_USER=gmartindev
+  - secure: jCbbVmQFKnXUo3xmzUH+OKmXFcC5q0RXGgDCDGbxQIl+Ndf0kc3YIP+NsAW5j3hWCpkJA6zGFXs4pTo2FtSSDPMilenG3EDb9CHgRnGnnxpDtDBpRP8ap1JbCkMAGV9cDb+cMV8bMqhuTfGmf6Xn3yMJBOl0dygA1oeN6tuWKxger6ICajxHev98MBW5HeVYhj28054HKZGGRS8+AG6RInBdGRxZVm0sCONW5jC8NiftmZSMUL9wr++WdraLrqEbTnLK3E5AR6UKcJ3JIRBNvVq4LEQQZasOYXp5KkzSabjTQ2XOeevLDn6nD7cqUAz5vPmw1GYo6JJpD1K5r3nB8gLJ7cPB0iO9Udr0/NrNk2gam9QB4X3zpCvO33gjHAxtWLtphZwGcFleJYhmaCaNHhZK574Oj9gigAnCAVRXVpHs+yNV1VMFXIYr2Fezy/panbOHPkMlJbxzklkVQ65hy6YBG7zE9vVFuXHOL4iQRI5iqo1hSJa7umUxQw1oOnHETPjL3zII53GLWSIxzj5rXdNdvlvZ1r5JXIS9tQn3/PUuBcjCNrcfRzz0c65p7RJVO19B2DGfEkY6f4QA0f+clr7r+4z5X/WsO4D6ihr9aSSQAX4lABJbR5KDi3rtcXZ/iXGqGK/FUfLLYsmJ6fSSAS7CeoEnkk3BDctj4H4PDqU=
+before_script:
+- version="$(awk '$2 == "OPCUA_TEST_SERVER_VERSION" { print $3; exit; }' Dockerfile)"
+- docker pull "$IMAGE_NAME" || true
+script:
+- docker build --pull --cache-from "$IMAGE_NAME" --tag "$IMAGE_NAME" .
+after_script:
+- docker images
+before_deploy:
+- docker login -u "$REGISTRY_USER" -p "$REGISTRY_PASSWORD"
+- docker tag "$IMAGE_NAME" "${IMAGE_NAME}:latest"
+- docker tag "$IMAGE_NAME" "${IMAGE_NAME}:${version}"
+deploy:
+  provider: script
+  script: docker push "${IMAGE_NAME}:latest" && docker push "${IMAGE_NAME}:${VERSION}"
+  on:
+    branch: master

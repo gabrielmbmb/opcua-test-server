@@ -3,9 +3,11 @@ FROM node:${NODE_VERSION}
 
 LABEL maintainer="gmartinbdev@gmail.com"
 
+ENV OPCUA_TEST_SERVER_VERSION 0.0.1
+
 RUN apt-get update && \
-		apt-get install -y ca-certificates && \
-		apt-get install -y openssl && \
+	apt-get install -y ca-certificates && \
+	apt-get install -y openssl && \
     npm install -g pm2
 
 WORKDIR /usr/src/app
