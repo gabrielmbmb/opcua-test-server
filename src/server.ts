@@ -8,7 +8,8 @@ import {
 } from 'node-opcua';
 import userManager from './userManager';
 import Device from './device';
-import fanSpeed from './variables/fan/speed';
+import { fanSpeed, setSpeed, accelerateFan } from './variables/fan/speed';
+import fanOn from './variables/fan/on';
 
 export default class Server {
   private endpoint: string;
@@ -80,6 +81,8 @@ export default class Server {
       // Add devices to the server
       const fan = new Device(namespace, addressSpace, 'fan');
       fan.addVariable(fanSpeed);
+      fan.addVariable(fanOn);
+      fan.addAndBindMethod(setSpeed, accelerateFan);
     }
   }
 }

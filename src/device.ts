@@ -4,6 +4,8 @@ import {
   AddressSpace,
   UAObject,
   AddVariableOptions,
+  AddMethodOptions,
+  MethodFunctor,
 } from 'node-opcua';
 
 export default class Device {
@@ -34,5 +36,14 @@ export default class Device {
       ...variable,
       ...{ componentOf: this.device },
     });
+  }
+
+  public addAndBindMethod(
+    method: AddMethodOptions,
+    bindMethod: MethodFunctor
+  ): void {
+    logger.debug(`Adding Method[${method.browseName}] to Device[${this.name}]`);
+    const newMethod = this.namespace.addMethod(this.device, method);
+    newMethod.bindMethod(bindMethod);
   }
 }
